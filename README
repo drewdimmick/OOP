@@ -1,0 +1,6 @@
+I realized only after I had created all of my code that the logic for the game is a little off.
+Instead of having one deck split in half I just have two decks. Also, I just gave a player a point 
+evertime they won instead of them taking the cards. If i were to have done this I would have just 
+popped the card off of the loser's vector and pushed it onto the winner's. I created a deck class
+and within the same header file I created a card struct, using enums to categorize the cards' suits
+and ranks.
