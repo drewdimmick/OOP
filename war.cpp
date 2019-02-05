@@ -17,12 +17,11 @@ int main() {
     int player2 = 0;
 
     PlayGame(deck1, deck2, player1, player2);
-
-    //std::cout << "player1: " << player1 << " , player2: " << player2 << std::endl;
     
     return 0;
 }
 
+// Contains the game loop
 void PlayGame(Deck deck1, Deck deck2, int &p1, int &p2) {
 
     for(int i = deck1.cards.size() - 1; i > -1; i--) {
@@ -33,7 +32,7 @@ void PlayGame(Deck deck1, Deck deck2, int &p1, int &p2) {
         std::string rankString2;
         std::string suitString2;
 
-        // Convert enum to string for output
+        // Convert enums to strings for output
         switch(deck1.cards[i].rank) {
             case two:
                 rankString1 = "Two";
@@ -154,11 +153,11 @@ void PlayGame(Deck deck1, Deck deck2, int &p1, int &p2) {
         if(deck1.cards[i].rank > deck2.cards[i].rank) {
             deck1.cards.push_back(deck2.cards[i];
             std::cout << "Player 1 wins this round!" << std::endl << std::endl;
-        }
+        } // if player2's card is higher then they win
         else if(deck1.cards[i].rank < deck2.cards[i].rank) {
             p2++;
             std::cout << "Player 2 wins this round!" << std::endl << std::endl;
-        }
+        } // if it's a tie then no one wins
         else {
             std::cout << "It's a draw!" << std::endl << std::endl;
         }
