@@ -22,11 +22,11 @@ $(BDIR):
 # End directories
 
 # All header files that need to be compiled go here
-_DEPS=
+_DEPS= car.h
 DEPS=$(patsubst %,$(IDIR)/%,$(_DEPS))
 
-# All object files (which correspond to compiled .c files, duh) go here
-_OBJ=main.o
+# All object files (which correspond to compiled .cpp files, duh) go here
+_OBJ= main.o car.o
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
 
 

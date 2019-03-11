@@ -1,11 +1,13 @@
 #include <cmath>
 
 #include <SFML/Graphics.hpp>
+
+#include "../include/car.h"
 using namespace sf;
 
-const int num = 8; // checkpoints
+/*const int num = 8; // checkpoints
 int points[num][2] = { 300,  610,  1270, 430,  1380, 2380, 1900, 2460,
-                       1970, 1700, 2550, 1680, 2560, 3150, 500,  3300 };
+                  1970, 1700, 2550, 1680, 2560, 3150, 500,  3300 };
 
 struct Car
 {
@@ -37,7 +39,7 @@ struct Car
     if ((x - tx) * (x - tx) + (y - ty) * (y - ty) < 25 * 25)
       n = (n + 1) % num;
   }
-};
+};*/
 
 int
 main()
@@ -80,13 +82,13 @@ main()
     }
 
     bool Up = 0, Right = 0, Down = 0, Left = 0;
-    if (Keyboard::isKeyPressed(Keyboard::Up))
+    if (Keyboard::isKeyPressed(Keyboard::W)) // Changed these all to WASD 
       Up = 1;
-    if (Keyboard::isKeyPressed(Keyboard::Right))
+    if (Keyboard::isKeyPressed(Keyboard::D)) // instead of the arrow keys
       Right = 1;
-    if (Keyboard::isKeyPressed(Keyboard::Down))
+    if (Keyboard::isKeyPressed(Keyboard::S))
       Down = 1;
-    if (Keyboard::isKeyPressed(Keyboard::Left))
+    if (Keyboard::isKeyPressed(Keyboard::A))
       Left = 1;
 
     // car movement
