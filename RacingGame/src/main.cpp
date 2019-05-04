@@ -5,63 +5,117 @@
 #include "../include/car.h"
 using namespace sf;
 
-/*const int num = 8; // checkpoints
-int points[num][2] = { 300,  610,  1270, 430,  1380, 2380, 1900, 2460,
-                  1970, 1700, 2550, 1680, 2560, 3150, 500,  3300 };
-
-struct Car
+struct eventListener
 {
-  float x, y, speed, angle;
-  int n;
+  // Keyboard Events
+  virtual void on_key_press(sf::Event::KeyEvent) {}
+  virtual void on_key_release(sf::Event::KeyEvent) {}
 
-  Car()
-  {
-    speed = 2;
-    angle = 0;
-    n = 0;
-  }
+  // Window Events
+  virtual void on_close() {}
+  virtual void on_gain_focus() {}
+  virtual void on_lose_focus() {}
+  virtual void on_resize() {}
+};
 
-  void move()
-  {
-    x += std::sin(angle) * speed;
-    y -= std::cos(angle) * speed;
-  }
-
-  void findTarget()
-  {
-    float tx = points[n][0];
-    float ty = points[n][1];
-    float beta = angle - std::atan2(tx - x, -ty + y);
-    if (std::sin(beta) < 0)
-      angle += 0.005 * speed;
-    else
-      angle -= 0.005 * speed;
-    if ((x - tx) * (x - tx) + (y - ty) * (y - ty) < 25 * 25)
-      n = (n + 1) % num;
-  }
-};*/
-
-int
-main()
+struct listenerNotifier
 {
-  RenderWindow app(VideoMode(640, 480), "Car Racing Game!");
-  app.setFramerateLimit(60);
+  listenerNotifier(sf::Window& w) : window(&w) { }
 
-  Texture t1, t2, t3;
-  t1.loadFromFile("images/background.png");
-  t2.loadFromFile("images/car.png");
-  t1.setSmooth(true);
-  t2.setSmooth(true);
+  // A vector of listeners to notify
+  std::vector<eventListener*> listeners;
 
-  Sprite sBackground(t1), sCar(t2);
-  sBackground.scale(2, 2);
+  // The window that we can poll for events
+  sf::Window* window;
 
+  void listen(eventListener& l)
+  {
+    listeners.push_back(&l);
+  }
+
+  // Notify listeners of queued events
+  void poll()
+  {
+    sf::Event e;
+    while(window->pollEvent(e))
+    {
+      process(e);
+    }
+  }
+
+  // Notify listeners of a single event
+  void process(sf::Event const& e)
+  {
+    switch(e.type)
+    {
+      case Event::Closed:
+        return notify([e](eventListener* l) {l->on_close();});
+      case Event::Resized:
+        return notify([e](eventListener* l) {l->on_resize();});
+
+      case Event::KeyPressed:
+        return notify([e](eventListener* l) {l->on_key_press(e.key);});
+      case Event::KeyReleased:
+        return notify([e](eventListener* l) {l->on_key_release(e.key);});
+
+      default:
+        break;
+    }
+  }
+
+  template <typename F>
+  void notify(F fn)
+  {
+    for(eventListener* l : listeners)
+    {
+      fn(1);
+    }
+  }
+};
+
+// Container for graphical resources
+struct racingGame_graphics
+{
+  racingGame_graphics()
+  {
+    textures[0].loadFromFile("images/background.png");
+    textures[1].loadFromFile("images/car.png");
+    textures[0].setSmooth(true);
+    textures[1].setSmooth(true);
+  }
+
+  // Array for loaded textures
+  sf::Texture textures[2];
+
+  // Drawable sprites
+  sf::Sprite background(textures[0]);
+  sf::Sprite sCar(textures[1]);
+
+  background.scale(2,2);
   sCar.setOrigin(22, 22);
-  float R = 22;
+};
 
-  const int N = 5;
+struct racingGame_app : eventListener
+{
+  racingGame_app()
+    : window(VideoMode(640, 480), "Car Racing Game!")
+  {
+    window.setFramerateLimit(60);
+  }
+
+  // Returns true if app is open
+  bool is_open() const { return window.isOpen(); }
+
+  // Closes the app
+  void on_close() override
+  {
+    window.close();
+  }
+
+  int N = 5;
   Car car[N];
-  for (int i = 0; i < N; i++) {
+  for(int i = 0; i < N; i++) 
+  {
     car[i].x = 300 + i * 50;
     car[i].y = 1700 + i * 80;
     car[i].speed = 7 + i;
@@ -71,16 +125,12 @@ main()
   float maxSpeed = 12.0;
   float acc = 0.2, dec = 0.3;
   float turnSpeed = 0.08;
+  float R = 22;
 
   int offsetX = 0, offsetY = 0;
 
-  while (app.isOpen()) {
-    Event e;
-    while (app.pollEvent(e)) {
-      if (e.type == Event::Closed)
-        app.close();
-    }
-
+  void on_key_press(sf::Event::KeyEvent e) override
+  {
     bool Up = 0, Right = 0, Down = 0, Left = 0;
     if (Keyboard::isKeyPressed(Keyboard::W)) // Changed these all to WASD 
       Up = 1;
@@ -127,9 +177,12 @@ main()
       car[i].move();
     for (int i = 1; i < N; i++)
       car[i].findTarget();
+  }
 
+  void onCollision()
+  {
     // collision
-    for (int i = 0; i < N; i++)
+    for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
         int dx = 0, dy = 0;
         while (dx * dx + dy * dy < 4 * R * R) {
@@ -143,29 +196,64 @@ main()
             break;
         }
       }
+    }
+  }
 
-    app.clear(Color::White);
+  void draw()
+  {
+
+    window.clear(Color::White);
 
     if (car[0].x > 320)
       offsetX = car[0].x - 320;
     if (car[0].y > 240)
       offsetY = car[0].y - 240;
 
-    sBackground.setPosition(-offsetX, -offsetY);
-    app.draw(sBackground);
+    graph.background.setPosition(-offsetX, -offsetY);
+    window.draw(graph.background);
 
     Color colors[10] = {
       Color::Red, Color::Green, Color::Magenta, Color::Blue, Color::White
     };
 
     for (int i = 0; i < N; i++) {
-      sCar.setPosition(car[i].x - offsetX, car[i].y - offsetY);
-      sCar.setRotation(car[i].angle * 180 / 3.141593);
-      sCar.setColor(colors[i]);
-      app.draw(sCar);
+      graph.sCar.setPosition(car[i].x - offsetX, car[i].y - offsetY);
+      graph.sCar.setRotation(car[i].angle * 180 / 3.141593);
+      graph.sCar.setColor(colors[i]);
+      window.draw(graph.sCar);
     }
 
-    app.display();
+    window.display();
+
+  }
+
+  // Container for graphics
+  racingGame_graphics graph;
+
+  // The game window
+  sf::RenderWindow window;
+};
+
+int
+main()
+{
+  // Create the app data window
+  racingGame_app app;
+
+  // Construct the event loop and listeners
+  listenerNotifier events(app.window);
+  events.listen(app);
+
+  while(app.is_open())
+  {
+    // Poll for events
+    events.poll();
+
+    // Update game state
+    app.onCollision();
+
+    // Render the game
+    app.draw();
   }
 
   return 0;
